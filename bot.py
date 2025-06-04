@@ -130,12 +130,18 @@ async def time_filter(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def difficulty_filter(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Show difficulty filter options."""
     keyboard = [
-        [InlineKeyboardButton(DIFFICULTY_LEVELS["easy"], callback_data="diff_easy")],
-        [InlineKeyboardButton(DIFFICULTY_LEVELS["medium"], callback_data="diff_medium")],
-        [InlineKeyboardButton(DIFFICULTY_LEVELS["hard"], callback_data="diff_hard")]
+        [InlineKeyboardButton("Легкие рецепты", callback_data="diff_easy")],
+        [InlineKeyboardButton("Средние рецепты", callback_data="diff_medium")],
+        [InlineKeyboardButton("Сложные рецепты", callback_data="diff_hard")]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
-    await update.message.reply_text("Выберите сложность рецепта:", reply_markup=reply_markup)
+    await update.message.reply_text(
+        "Выберите сложность рецепта:\n\n"
+        "🍳 Легкие рецепты - для начинающих поваров\n"
+        "👨‍🍳 Средние рецепты - требуют базовых навыков\n"
+        "👨‍🍳 Сложные рецепты - для опытных кулинаров",
+        reply_markup=reply_markup
+    )
 
 async def filter_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle filter selection."""
@@ -153,7 +159,7 @@ async def filter_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif filter_type == 'diff':
         filtered_recipes = [
             r for r in RECIPES 
-            if r['difficulty'].lower() == value
+            if r['difficulty'] == value
         ]
     elif filter_type == 'cal':
         max_calories = int(value) if value != '400+' else float('inf')
@@ -224,12 +230,20 @@ async def send_recipe(update: Update, recipe: dict):
     """Send a formatted recipe message."""
     try:
         category = CATEGORIES[get_recipe_category(recipe)]
+        difficulty = recipe['difficulty_details']
+        
         message = (
             f"🍳 {recipe['name']}\n"
             f"📌 Категория: {category}\n"
             f"⏱ Время приготовления: {recipe['cooking_time']}\n"
-            f"📊 Сложность: {recipe['difficulty']}\n"
+            f"📊 Сложность: {difficulty['level']}\n"
             f"🔥 Калории: {recipe['calories']}\n\n"
+            f"🔧 Необходимые навыки:\n"
+            f"{', '.join(difficulty['skills'])}\n\n"
+            f"🛠 Необходимое оборудование:\n"
+            f"{', '.join(difficulty['equipment'])}\n\n"
+            f"💡 Советы:\n"
+            f"{difficulty['tips']}\n\n"
             f"📝 Ингредиенты:\n"
             f"{', '.join(recipe['ingredients'])}\n\n"
             f"📋 Инструкция:\n"
